@@ -106,12 +106,24 @@ class SafetyEngine(BaseEngine):
         try:
             data = json.loads(output)
         except json.JSONDecodeError:
-            self.log("Failed to parse Safety output")
-            return []
+            json_start = output.find("{")
+            json_end = output.rfind("}") + 1
+            if json_start != -1 and json_end > json_start:
+                try:
+                    data = json.loads(output[json_start:json_end])
+                except json.JSONDecodeError:
+                    self.log("Failed to parse Safety output")
+                    return []
+            else:
+                self.log("Failed to parse Safety output")
+                return []
 
-        vulnerabilities = data if isinstance(data, list) else data.get("vulnerabilities", [])
+        vulnerabilities = data.get("vulnerabilities", [])
+        ignored_vulns = data.get("ignored_vulnerabilities", [])
 
-        for vuln in vulnerabilities:
+        all_vulns = vulnerabilities + ignored_vulns
+
+        for vuln in all_vulns:
             if isinstance(vuln, list) and len(vuln) >= 5:
                 package_name = vuln[0]
                 affected_versions = vuln[1]
@@ -120,14 +132,18 @@ class SafetyEngine(BaseEngine):
                 vuln_id = vuln[4]
             elif isinstance(vuln, dict):
                 package_name = vuln.get("package_name", vuln.get("name", "Unknown"))
-                affected_versions = vuln.get("vulnerable_versions", vuln.get("affected_versions", ""))
-                installed_version = vuln.get("analyzed_version", vuln.get("installed_version", ""))
+                vuln_specs = vuln.get("vulnerable_spec", vuln.get("all_vulnerable_specs", []))
+                affected_versions = ", ".join(vuln_specs) if isinstance(vuln_specs, list) else str(vuln_specs)
+                installed_version = vuln.get("analyzed_version", "unpinned")
                 description = vuln.get("advisory", vuln.get("description", ""))
                 vuln_id = vuln.get("vulnerability_id", vuln.get("id", ""))
             else:
                 continue
 
-            severity = self._determine_severity(description, vuln_id)
+            if not description:
+                continue
+
+            severity = self._determine_severity(description, str(vuln_id))
 
             finding = Finding(
                 title=f"Vulnerable dependency: {package_name}",

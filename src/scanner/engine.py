@@ -11,6 +11,19 @@ from .engines.bandit_engine import BanditEngine
 from .engines.semgrep_engine import SemgrepEngine
 from .engines.safety_engine import SafetyEngine
 from .engines.gemini_engine import GeminiEngine
+from .engines.gitleaks_engine import GitleaksEngine
+from .engines.trufflehog_engine import TruffleHogEngine
+from .engines.detect_secrets_engine import DetectSecretsEngine
+from .engines.trivy_engine import TrivyEngine
+from .engines.grype_engine import GrypeEngine
+from .engines.checkov_engine import CheckovEngine
+from .engines.shellcheck_engine import ShellCheckEngine
+from .engines.hadolint_engine import HadolintEngine
+from .engines.gosec_engine import GosecEngine
+from .engines.brakeman_engine import BrakemanEngine
+from .engines.spotbugs_engine import SpotBugsEngine
+from .engines.phpstan_engine import PHPStanEngine
+from .engines.horusec_engine import HorusecEngine
 
 
 class Scanner:
@@ -53,6 +66,19 @@ class Scanner:
         enable_semgrep: bool = True,
         enable_safety: bool = True,
         enable_gemini: bool = True,
+        enable_gitleaks: bool = True,
+        enable_trufflehog: bool = True,
+        enable_detect_secrets: bool = True,
+        enable_trivy: bool = True,
+        enable_grype: bool = True,
+        enable_checkov: bool = True,
+        enable_shellcheck: bool = True,
+        enable_hadolint: bool = True,
+        enable_gosec: bool = True,
+        enable_brakeman: bool = True,
+        enable_spotbugs: bool = True,
+        enable_phpstan: bool = True,
+        enable_horusec: bool = True,
     ):
         self.on_progress = on_progress
         self.gemini_api_key = gemini_api_key
@@ -61,6 +87,19 @@ class Scanner:
         self.enable_semgrep = enable_semgrep
         self.enable_safety = enable_safety
         self.enable_gemini = enable_gemini
+        self.enable_gitleaks = enable_gitleaks
+        self.enable_trufflehog = enable_trufflehog
+        self.enable_detect_secrets = enable_detect_secrets
+        self.enable_trivy = enable_trivy
+        self.enable_grype = enable_grype
+        self.enable_checkov = enable_checkov
+        self.enable_shellcheck = enable_shellcheck
+        self.enable_hadolint = enable_hadolint
+        self.enable_gosec = enable_gosec
+        self.enable_brakeman = enable_brakeman
+        self.enable_spotbugs = enable_spotbugs
+        self.enable_phpstan = enable_phpstan
+        self.enable_horusec = enable_horusec
         self._engines: list[BaseEngine] = []
 
     def log(self, message: str) -> None:
@@ -105,6 +144,110 @@ class Scanner:
                 self.log(f"Gemini AI engine loaded ({engine.model_name})")
             else:
                 self.log("Gemini engine not available - check API key")
+
+        if self.enable_gitleaks:
+            engine = GitleaksEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Gitleaks engine loaded")
+            else:
+                self.log("Gitleaks not available - install from: https://github.com/gitleaks/gitleaks")
+
+        if self.enable_trufflehog:
+            engine = TruffleHogEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("TruffleHog engine loaded")
+            else:
+                self.log("TruffleHog not available - install from: https://github.com/trufflesecurity/trufflehog")
+
+        if self.enable_detect_secrets:
+            engine = DetectSecretsEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("detect-secrets engine loaded")
+            else:
+                self.log("detect-secrets not available - install with: pip install detect-secrets")
+
+        if self.enable_trivy:
+            engine = TrivyEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Trivy engine loaded")
+            else:
+                self.log("Trivy not available - install from: https://github.com/aquasecurity/trivy")
+
+        if self.enable_grype:
+            engine = GrypeEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Grype engine loaded")
+            else:
+                self.log("Grype not available - install from: https://github.com/anchore/grype")
+
+        if self.enable_checkov:
+            engine = CheckovEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Checkov engine loaded")
+            else:
+                self.log("Checkov not available - install with: pip install checkov")
+
+        if self.enable_shellcheck:
+            engine = ShellCheckEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("ShellCheck engine loaded")
+            else:
+                self.log("ShellCheck not available - install from: https://github.com/koalaman/shellcheck")
+
+        if self.enable_hadolint:
+            engine = HadolintEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Hadolint engine loaded")
+            else:
+                self.log("Hadolint not available - install from: https://github.com/hadolint/hadolint")
+
+        if self.enable_gosec:
+            engine = GosecEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Gosec engine loaded")
+            else:
+                self.log("Gosec not available - install with: go install github.com/securego/gosec/v2/cmd/gosec@latest")
+
+        if self.enable_brakeman:
+            engine = BrakemanEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Brakeman engine loaded")
+            else:
+                self.log("Brakeman not available - install with: gem install brakeman")
+
+        if self.enable_spotbugs:
+            engine = SpotBugsEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("SpotBugs engine loaded")
+            else:
+                self.log("SpotBugs not available - install from: https://spotbugs.github.io/")
+
+        if self.enable_phpstan:
+            engine = PHPStanEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("PHPStan engine loaded")
+            else:
+                self.log("PHPStan not available - install with: composer require --dev phpstan/phpstan")
+
+        if self.enable_horusec:
+            engine = HorusecEngine(on_progress=self.on_progress)
+            if engine.is_available():
+                self._engines.append(engine)
+                self.log("Horusec engine loaded")
+            else:
+                self.log("Horusec not available - install from: https://horusec.io/")
 
     def _load_gitignore(self, target_path: Path) -> pathspec.PathSpec:
         patterns = self.DEFAULT_IGNORE_PATTERNS.copy()

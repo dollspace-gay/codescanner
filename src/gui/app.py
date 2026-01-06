@@ -18,6 +18,62 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
+class EngineCategory(ctk.CTkFrame):
+    """Collapsible category frame for organizing scanner engines."""
+
+    def __init__(self, parent, title: str, icon: str = "▶", **kwargs):
+        super().__init__(parent, **kwargs)
+        self._expanded = True
+        self._title = title
+        self._icon = icon
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self._header = ctk.CTkButton(
+            self,
+            text=f"▼ {icon} {title}",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="transparent",
+            hover_color=("gray80", "gray25"),
+            anchor="w",
+            command=self._toggle,
+        )
+        self._header.grid(row=0, column=0, sticky="ew", padx=2, pady=2)
+
+        self._content = ctk.CTkFrame(self, fg_color="transparent")
+        self._content.grid(row=1, column=0, sticky="ew", padx=(15, 0))
+
+        self._checkboxes: list[ctk.CTkCheckBox] = []
+
+    def add_engine(self, text: str, variable: ctk.BooleanVar) -> ctk.CTkCheckBox:
+        cb = ctk.CTkCheckBox(
+            self._content,
+            text=text,
+            variable=variable,
+            font=ctk.CTkFont(size=11),
+        )
+        cb.pack(anchor="w", pady=1)
+        self._checkboxes.append(cb)
+        return cb
+
+    def _toggle(self) -> None:
+        self._expanded = not self._expanded
+        if self._expanded:
+            self._content.grid(row=1, column=0, sticky="ew", padx=(15, 0))
+            self._header.configure(text=f"▼ {self._icon} {self._title}")
+        else:
+            self._content.grid_forget()
+            self._header.configure(text=f"▶ {self._icon} {self._title}")
+
+    def select_all(self) -> None:
+        for cb in self._checkboxes:
+            cb.select()
+
+    def deselect_all(self) -> None:
+        for cb in self._checkboxes:
+            cb.deselect()
+
+
 class CodeScannerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -28,6 +84,7 @@ class CodeScannerApp(ctk.CTk):
 
         self._scan_result: Optional[ScanResult] = None
         self._is_scanning = False
+        self._engine_categories: list[EngineCategory] = []
 
         self._setup_ui()
         self._load_settings()
@@ -42,7 +99,7 @@ class CodeScannerApp(ctk.CTk):
     def _setup_sidebar(self) -> None:
         sidebar = ctk.CTkFrame(self, width=280, corner_radius=0)
         sidebar.grid(row=0, column=0, sticky="nsew")
-        sidebar.grid_rowconfigure(10, weight=1)
+        sidebar.grid_rowconfigure(7, weight=1)
 
         logo_label = ctk.CTkLabel(
             sidebar,
@@ -72,31 +129,89 @@ class CodeScannerApp(ctk.CTk):
         )
         browse_btn.pack(side="right", padx=(5, 0), pady=5)
 
-        engines_label = ctk.CTkLabel(
-            sidebar, text="Scanner Engines:", font=ctk.CTkFont(weight="bold")
-        )
-        engines_label.grid(row=3, column=0, padx=20, pady=(20, 5), sticky="w")
+        engines_header = ctk.CTkFrame(sidebar, fg_color="transparent")
+        engines_header.grid(row=3, column=0, padx=20, pady=(15, 5), sticky="ew")
+
+        ctk.CTkLabel(
+            engines_header, text="Scanner Engines:", font=ctk.CTkFont(weight="bold")
+        ).pack(side="left")
+
+        select_btns = ctk.CTkFrame(engines_header, fg_color="transparent")
+        select_btns.pack(side="right")
+        ctk.CTkButton(
+            select_btns, text="All", width=35, height=20,
+            font=ctk.CTkFont(size=10), command=self._select_all_engines
+        ).pack(side="left", padx=2)
+        ctk.CTkButton(
+            select_btns, text="None", width=35, height=20,
+            font=ctk.CTkFont(size=10), command=self._deselect_all_engines
+        ).pack(side="left")
 
         self.bandit_var = ctk.BooleanVar(value=True)
         self.semgrep_var = ctk.BooleanVar(value=True)
         self.safety_var = ctk.BooleanVar(value=True)
         self.gemini_var = ctk.BooleanVar(value=True)
+        self.gitleaks_var = ctk.BooleanVar(value=True)
+        self.trufflehog_var = ctk.BooleanVar(value=True)
+        self.detect_secrets_var = ctk.BooleanVar(value=True)
+        self.trivy_var = ctk.BooleanVar(value=True)
+        self.grype_var = ctk.BooleanVar(value=True)
+        self.checkov_var = ctk.BooleanVar(value=True)
+        self.shellcheck_var = ctk.BooleanVar(value=True)
+        self.hadolint_var = ctk.BooleanVar(value=True)
+        self.gosec_var = ctk.BooleanVar(value=True)
+        self.brakeman_var = ctk.BooleanVar(value=True)
+        self.spotbugs_var = ctk.BooleanVar(value=True)
+        self.phpstan_var = ctk.BooleanVar(value=True)
+        self.horusec_var = ctk.BooleanVar(value=True)
 
-        ctk.CTkCheckBox(sidebar, text="Bandit (Python)", variable=self.bandit_var).grid(
-            row=4, column=0, padx=30, pady=2, sticky="w"
-        )
-        ctk.CTkCheckBox(sidebar, text="Semgrep (Multi-lang)", variable=self.semgrep_var).grid(
-            row=5, column=0, padx=30, pady=2, sticky="w"
-        )
-        ctk.CTkCheckBox(sidebar, text="Safety (Dependencies)", variable=self.safety_var).grid(
-            row=6, column=0, padx=30, pady=2, sticky="w"
-        )
-        ctk.CTkCheckBox(sidebar, text="Gemini AI", variable=self.gemini_var).grid(
-            row=7, column=0, padx=30, pady=2, sticky="w"
-        )
+        engines_frame = ctk.CTkFrame(sidebar, fg_color="transparent")
+        engines_frame.grid(row=4, column=0, padx=10, pady=5, sticky="ew")
+
+        # SAST Category
+        sast_cat = EngineCategory(engines_frame, "SAST", icon="🔍")
+        sast_cat.pack(fill="x", pady=2)
+        sast_cat.add_engine("Bandit (Python)", self.bandit_var)
+        sast_cat.add_engine("Semgrep (Multi-lang)", self.semgrep_var)
+        sast_cat.add_engine("ShellCheck (Shell)", self.shellcheck_var)
+        sast_cat.add_engine("Gosec (Go)", self.gosec_var)
+        sast_cat.add_engine("Brakeman (Rails)", self.brakeman_var)
+        sast_cat.add_engine("SpotBugs (Java)", self.spotbugs_var)
+        sast_cat.add_engine("PHPStan (PHP)", self.phpstan_var)
+        sast_cat.add_engine("Horusec (Multi-lang)", self.horusec_var)
+        self._engine_categories.append(sast_cat)
+
+        # Secrets Detection Category
+        secrets_cat = EngineCategory(engines_frame, "Secrets", icon="🔑")
+        secrets_cat.pack(fill="x", pady=2)
+        secrets_cat.add_engine("Gitleaks", self.gitleaks_var)
+        secrets_cat.add_engine("TruffleHog", self.trufflehog_var)
+        secrets_cat.add_engine("detect-secrets", self.detect_secrets_var)
+        self._engine_categories.append(secrets_cat)
+
+        # Dependencies Category
+        deps_cat = EngineCategory(engines_frame, "Dependencies", icon="📦")
+        deps_cat.pack(fill="x", pady=2)
+        deps_cat.add_engine("Safety (Python)", self.safety_var)
+        deps_cat.add_engine("Grype (Multi-lang)", self.grype_var)
+        deps_cat.add_engine("Trivy (Vuln Scanner)", self.trivy_var)
+        self._engine_categories.append(deps_cat)
+
+        # IaC Category
+        iac_cat = EngineCategory(engines_frame, "Infrastructure", icon="🏗️")
+        iac_cat.pack(fill="x", pady=2)
+        iac_cat.add_engine("Checkov (IaC)", self.checkov_var)
+        iac_cat.add_engine("Hadolint (Docker)", self.hadolint_var)
+        self._engine_categories.append(iac_cat)
+
+        # AI Category
+        ai_cat = EngineCategory(engines_frame, "AI Analysis", icon="🤖")
+        ai_cat.pack(fill="x", pady=2)
+        ai_cat.add_engine("Gemini AI", self.gemini_var)
+        self._engine_categories.append(ai_cat)
 
         api_frame = ctk.CTkFrame(sidebar, fg_color="transparent")
-        api_frame.grid(row=8, column=0, padx=20, pady=15, sticky="ew")
+        api_frame.grid(row=5, column=0, padx=20, pady=10, sticky="ew")
 
         ctk.CTkLabel(api_frame, text="Gemini API Key:").pack(anchor="w")
         self.api_key_entry = ctk.CTkEntry(api_frame, show="•", width=220)
@@ -118,16 +233,16 @@ class CodeScannerApp(ctk.CTk):
             height=45,
             command=self._start_scan,
         )
-        self.scan_btn.grid(row=9, column=0, padx=20, pady=20, sticky="ew")
+        self.scan_btn.grid(row=6, column=0, padx=20, pady=15, sticky="ew")
 
         self.progress_bar = ctk.CTkProgressBar(sidebar)
-        self.progress_bar.grid(row=11, column=0, padx=20, pady=10, sticky="ew")
+        self.progress_bar.grid(row=8, column=0, padx=20, pady=10, sticky="ew")
         self.progress_bar.set(0)
 
         self.status_label = ctk.CTkLabel(
             sidebar, text="Ready", text_color="gray", font=ctk.CTkFont(size=11)
         )
-        self.status_label.grid(row=12, column=0, padx=20, pady=(0, 20))
+        self.status_label.grid(row=9, column=0, padx=20, pady=(0, 20))
 
     def _setup_main_area(self) -> None:
         main_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="transparent")
@@ -264,6 +379,19 @@ class CodeScannerApp(ctk.CTk):
             enable_semgrep=self.semgrep_var.get(),
             enable_safety=self.safety_var.get(),
             enable_gemini=self.gemini_var.get() and bool(api_key),
+            enable_gitleaks=self.gitleaks_var.get(),
+            enable_trufflehog=self.trufflehog_var.get(),
+            enable_detect_secrets=self.detect_secrets_var.get(),
+            enable_trivy=self.trivy_var.get(),
+            enable_grype=self.grype_var.get(),
+            enable_checkov=self.checkov_var.get(),
+            enable_shellcheck=self.shellcheck_var.get(),
+            enable_hadolint=self.hadolint_var.get(),
+            enable_gosec=self.gosec_var.get(),
+            enable_brakeman=self.brakeman_var.get(),
+            enable_spotbugs=self.spotbugs_var.get(),
+            enable_phpstan=self.phpstan_var.get(),
+            enable_horusec=self.horusec_var.get(),
         )
 
         try:
@@ -419,6 +547,14 @@ class CodeScannerApp(ctk.CTk):
         api_key = os.environ.get("GEMINI_API_KEY", "")
         if api_key:
             self.api_key_entry.insert(0, api_key)
+
+    def _select_all_engines(self) -> None:
+        for cat in self._engine_categories:
+            cat.select_all()
+
+    def _deselect_all_engines(self) -> None:
+        for cat in self._engine_categories:
+            cat.deselect_all()
 
 
 def main() -> None:

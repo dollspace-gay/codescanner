@@ -240,14 +240,41 @@ The security scan identified **{total} potential vulnerabilities** in the codeba
             return str(file_path)
 
     def _tool_summary(self) -> str:
+        tools_used = set(f.tool for f in self.result.findings) if self.result.findings else set()
+
+        all_tools = {
+            "bandit": "Python security linter",
+            "semgrep": "Multi-language static analysis",
+            "safety": "Python dependency scanner",
+            "gemini": "AI-powered code analysis",
+            "gitleaks": "Secrets detection scanner",
+            "trufflehog": "Git secrets scanner",
+            "detect-secrets": "Secrets detection tool",
+            "trivy": "Vulnerability scanner",
+            "grype": "Dependency vulnerability scanner",
+            "checkov": "Infrastructure as Code scanner",
+            "shellcheck": "Shell script analyzer",
+            "hadolint": "Dockerfile linter",
+            "gosec": "Go security checker",
+            "brakeman": "Rails security scanner",
+            "spotbugs": "Java security scanner",
+            "phpstan": "PHP static analyzer",
+            "horusec": "Multi-language SAST",
+        }
+
+        rows = []
+        for tool, desc in all_tools.items():
+            if not tools_used or tool in tools_used:
+                rows.append(f"| {tool} | {desc} |")
+
+        if not rows:
+            rows = [f"| {t} | {d} |" for t, d in list(all_tools.items())[:4]]
+
         return """## Tools Used
 
 | Tool | Description |
 |------|-------------|
-| Bandit | Python security linter - detects common security issues |
-| Semgrep | Multi-language static analysis with security rulesets |
-| Safety | Python dependency vulnerability scanner |
-| Gemini AI | AI-powered code analysis using Gemini 3 Pro |"""
+""" + "\n".join(rows)
 
     def _footer(self) -> str:
         return f"""---

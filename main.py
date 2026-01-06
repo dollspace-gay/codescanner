@@ -3,8 +3,11 @@
 
 import argparse
 import asyncio
+import io
 import sys
 from pathlib import Path
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from src.scanner import Scanner
 from src.scanner.report import ReportGenerator
@@ -31,6 +34,19 @@ def run_cli(args: argparse.Namespace) -> int:
         enable_semgrep=not args.no_semgrep,
         enable_safety=not args.no_safety,
         enable_gemini=bool(args.api_key) and not args.no_gemini,
+        enable_gitleaks=not args.no_gitleaks,
+        enable_trufflehog=not args.no_trufflehog,
+        enable_detect_secrets=not args.no_detect_secrets,
+        enable_trivy=not args.no_trivy,
+        enable_grype=not args.no_grype,
+        enable_checkov=not args.no_checkov,
+        enable_shellcheck=not args.no_shellcheck,
+        enable_hadolint=not args.no_hadolint,
+        enable_gosec=not args.no_gosec,
+        enable_brakeman=not args.no_brakeman,
+        enable_spotbugs=not args.no_spotbugs,
+        enable_phpstan=not args.no_phpstan,
+        enable_horusec=not args.no_horusec,
     )
 
     print(f"\nScanning: {target}\n")
@@ -81,6 +97,19 @@ Examples:
     scan_parser.add_argument("--no-semgrep", action="store_true", help="Disable Semgrep")
     scan_parser.add_argument("--no-safety", action="store_true", help="Disable Safety")
     scan_parser.add_argument("--no-gemini", action="store_true", help="Disable Gemini AI")
+    scan_parser.add_argument("--no-gitleaks", action="store_true", help="Disable Gitleaks")
+    scan_parser.add_argument("--no-trufflehog", action="store_true", help="Disable TruffleHog")
+    scan_parser.add_argument("--no-detect-secrets", action="store_true", help="Disable detect-secrets")
+    scan_parser.add_argument("--no-trivy", action="store_true", help="Disable Trivy")
+    scan_parser.add_argument("--no-grype", action="store_true", help="Disable Grype")
+    scan_parser.add_argument("--no-checkov", action="store_true", help="Disable Checkov")
+    scan_parser.add_argument("--no-shellcheck", action="store_true", help="Disable ShellCheck")
+    scan_parser.add_argument("--no-hadolint", action="store_true", help="Disable Hadolint")
+    scan_parser.add_argument("--no-gosec", action="store_true", help="Disable Gosec")
+    scan_parser.add_argument("--no-brakeman", action="store_true", help="Disable Brakeman")
+    scan_parser.add_argument("--no-spotbugs", action="store_true", help="Disable SpotBugs")
+    scan_parser.add_argument("--no-phpstan", action="store_true", help="Disable PHPStan")
+    scan_parser.add_argument("--no-horusec", action="store_true", help="Disable Horusec")
 
     subparsers.add_parser("gui", help="Launch graphical interface")
 
