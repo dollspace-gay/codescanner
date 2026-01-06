@@ -72,30 +72,135 @@ pip install -r requirements.txt
 
 ### 4. Install external tools (optional)
 
-For full scanning capabilities, install the external tools:
+For full scanning capabilities, install the external tools below. The scanner will automatically detect which tools are available and skip those that aren't installed.
 
-```bash
+#### Python-based tools (installed via pip)
+
+These are included in `requirements.txt` and installed automatically:
+- **Bandit** - Python security linter
+- **Semgrep** - Multi-language static analysis
+- **Safety** - Python dependency checker
+- **detect-secrets** - Secrets detection
+- **Checkov** - Infrastructure as Code scanner
+
+#### Windows Installation
+
+**Using Chocolatey (requires admin):**
+```powershell
 # Secrets detection
-# Gitleaks: https://github.com/gitleaks/gitleaks
-# TruffleHog: https://github.com/trufflesecurity/trufflehog
+choco install gitleaks
+choco install trufflehog
 
 # Vulnerability scanning
-# Trivy: https://github.com/aquasecurity/trivy
-# Grype: https://github.com/anchore/grype
+choco install trivy
+choco install grype
 
 # IaC/Container
-# Hadolint: https://github.com/hadolint/hadolint
-# ShellCheck: https://github.com/koalaman/shellcheck
-
-# Language-specific
-# Gosec: go install github.com/securego/gosec/v2/cmd/gosec@latest
-# Brakeman: gem install brakeman
-# SpotBugs: https://spotbugs.github.io/
-# PHPStan: composer require --dev phpstan/phpstan
-
-# Multi-language
-# Horusec: https://horusec.io/
+choco install hadolint
+choco install shellcheck
 ```
+
+**Using winget:**
+```powershell
+winget install Gitleaks.Gitleaks
+winget install aquasecurity.trivy
+```
+
+**Manual Downloads:**
+- [Gitleaks](https://github.com/gitleaks/gitleaks/releases) - Download `gitleaks_*_windows_amd64.zip`
+- [TruffleHog](https://github.com/trufflesecurity/trufflehog/releases) - Download `trufflehog_*_windows_amd64.tar.gz`
+- [Trivy](https://github.com/aquasecurity/trivy/releases) - Download `trivy_*_Windows-64bit.zip`
+- [Grype](https://github.com/anchore/grype/releases) - Download `grype_*_windows_amd64.zip`
+- [Hadolint](https://github.com/hadolint/hadolint/releases) - Download `hadolint-Windows-x86_64.exe`
+- [ShellCheck](https://github.com/koalaman/shellcheck/releases) - Download `shellcheck-*.zip`
+- [Horusec](https://github.com/ZupIT/horusec/releases) - Download `horusec_*_windows_amd64.zip`
+
+Extract and add to your PATH, or place in the project directory.
+
+#### Linux Installation
+
+**Using apt (Debian/Ubuntu):**
+```bash
+# ShellCheck
+sudo apt install shellcheck
+
+# Hadolint
+wget -qO /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+sudo chmod +x /usr/local/bin/hadolint
+```
+
+**Using Homebrew (Linux/macOS):**
+```bash
+brew install gitleaks
+brew install trufflehog
+brew install trivy
+brew install grype
+brew install hadolint
+brew install shellcheck
+brew install horusec
+```
+
+**Using install scripts:**
+```bash
+# Gitleaks
+curl -sSfL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks_*_linux_x64.tar.gz | tar xz
+sudo mv gitleaks /usr/local/bin/
+
+# TruffleHog
+curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+
+# Trivy
+curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+# Grype
+curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+# Horusec
+curl -fsSL https://raw.githubusercontent.com/ZupIT/horusec/main/deployments/scripts/install.sh | bash -s latest
+```
+
+#### Language-Specific Tools
+
+**Go (Gosec):**
+```bash
+# Requires Go 1.20+
+go install github.com/securego/gosec/v2/cmd/gosec@latest
+```
+
+**Ruby (Brakeman):**
+```bash
+# Requires Ruby 2.7+
+gem install brakeman
+```
+
+**Java (SpotBugs):**
+```bash
+# Download from https://spotbugs.github.io/
+# Or use Maven/Gradle plugin
+
+# Linux/macOS
+wget https://github.com/spotbugs/spotbugs/releases/download/4.8.3/spotbugs-4.8.3.tgz
+tar xzf spotbugs-4.8.3.tgz
+export PATH=$PATH:$(pwd)/spotbugs-4.8.3/bin
+```
+
+**PHP (PHPStan):**
+```bash
+# Requires PHP 7.4+ and Composer
+composer global require phpstan/phpstan
+
+# Or per-project
+composer require --dev phpstan/phpstan
+```
+
+#### Verifying Installation
+
+Run the scanner to see which tools are detected:
+```bash
+python main.py scan ./your-project
+```
+
+The scanner will show `[tool] not available` for missing tools and continue with available engines
 
 ## Usage
 
